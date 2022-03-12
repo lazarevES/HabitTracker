@@ -127,9 +127,48 @@ class HabitViewController: UIViewController {
         return button
     }()
     
+    lazy var viewTitle: UILabel = {
+        let label = UILabel()
+        label.toAutoLayout()
+        label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        label.textAlignment = .center
+        return label
+    }()
+    
+    lazy var cancelButton: UIButton = {
+        let button = UIButton()
+        button.toAutoLayout()
+        button.setTitle("Отменить", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        button.setTitleColor(Const.purpurColor, for: .normal)
+        button.addTarget(self, action: #selector(cancelHabit), for: .touchUpInside)
+        return button
+    }()
+    
+    lazy var saveButton: UIButton = {
+        let button = UIButton()
+        button.toAutoLayout()
+        button.setTitle("Сохранить", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        button.setTitleColor(Const.purpurColor, for: .normal)
+        button.addTarget(self, action: #selector(saveHabit), for: .touchUpInside)
+        return button
+    }()
+    
+    lazy var stackHeaderView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.toAutoLayout()
+        //stackView.backgroundColor = Const.foneColor
+        stackView.distribution = .fillProportionally
+        stackView.axis = .horizontal
+        return stackView
+    }()
+    
     init(_ editHabit: Habit?) {
         
         super.init(nibName: nil, bundle: nil)
+        
+        modalPresentationStyle = .fullScreen
         
         habit = editHabit
         if let habitSource = habit {
@@ -138,8 +177,10 @@ class HabitViewController: UIViewController {
             habitName = habitSource.name
             nameTextField.text = habitName
             deleteButton.isHidden = false
+            viewTitle.text = "Править"
         } else {
             deleteButton.isHidden = true
+            viewTitle.text = "Создать"
         }
     }
     
@@ -150,18 +191,13 @@ class HabitViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
     
-        title = "Создать"
         view.backgroundColor = .white
         
-        let leftBarButtonItem = UIBarButtonItem(title: "Отменить", style: .plain , target: self, action: #selector(cancelHabit))
-        leftBarButtonItem.tintColor = Const.purpurColor
-        navigationItem.leftBarButtonItem = leftBarButtonItem
+        stackHeaderView.addArrangedSubview(cancelButton)
+        stackHeaderView.addArrangedSubview(viewTitle)
+        stackHeaderView.addArrangedSubview(saveButton)
         
-        let rightBarButtonItem = UIBarButtonItem(title: "Сохранить", style: .plain , target: self, action: #selector(saveHabit))
-        rightBarButtonItem.tintColor = Const.purpurColor
-        navigationItem.rightBarButtonItem = rightBarButtonItem
-        
-        view.addSubviews(nameLabel, nameTextField, colorLabel, colorButton, dateLabel, dateText, dateValue, datePicker, deleteButton)
+        view.addSubviews(nameLabel, nameTextField, colorLabel, colorButton, dateLabel, dateText, dateValue, datePicker, deleteButton, stackHeaderView)
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapOnView))
         view.addGestureRecognizer(tapGesture)
@@ -182,7 +218,11 @@ class HabitViewController: UIViewController {
     
     func useConstraint() {
         
-        [nameLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: Const.titleIndent),
+        [stackHeaderView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+         stackHeaderView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+         stackHeaderView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+         
+         nameLabel.topAnchor.constraint(equalTo: stackHeaderView.bottomAnchor, constant: Const.titleIndent),
          nameLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: Const.leadingMargin),
          nameLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: Const.trailingMargin),
          nameLabel.heightAnchor.constraint(equalToConstant: nameLabel.font.pointSize),
@@ -222,7 +262,7 @@ class HabitViewController: UIViewController {
     }
     
     @objc func cancelHabit() {
-        navigationController?.popViewController(animated: true)
+        dismiss(animated: true, completion: nil)
     }
     
     @objc func saveHabit() {
@@ -253,7 +293,8 @@ class HabitViewController: UIViewController {
                 HabitsViewController.collectionView.reloadData()
             }
         }
-        navigationController?.popViewController(animated: true)
+        
+        dismiss(animated: true, completion: nil)
     }
     
     @objc func deleteHabit() {
@@ -267,7 +308,8 @@ class HabitViewController: UIViewController {
                 HabitsStore.shared.habits.removeAll(where: {$0 == selfHabit})
                 HabitsViewController.collectionView.reloadData()
             }
-            self.navigationController?.popToRootViewController(animated: true)
+            HabitDetailsViewController.isDeleted = true
+            self.dismiss(animated: true, completion: nil)
         }
         
         alertController.addAction(cancelAction)
@@ -295,7 +337,7 @@ class HabitViewController: UIViewController {
         let colorPicker = UIColorPickerViewController()
         colorPicker.selectedColor = habitColor
         colorPicker.delegate = self
-        navigationController?.present(colorPicker, animated: true, completion: nil)
+        present(colorPicker, animated: true, completion: nil)
     }
 
 }

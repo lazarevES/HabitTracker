@@ -20,9 +20,12 @@ class HabitDetailsViewController: UIViewController {
         return table
     }()
     
+    static var isDeleted = false
+    
     let habit: Habit
     
     init(_ habit: Habit) {
+        HabitDetailsViewController.isDeleted = false
         self.habit = habit
         super.init(nibName: nil, bundle: nil)        
     }
@@ -71,7 +74,12 @@ class HabitDetailsViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        title = habit.name
+        if HabitDetailsViewController.isDeleted {
+            HabitDetailsViewController.isDeleted = false
+            navigationController?.popViewController(animated: true)
+        } else {
+            title = habit.name
+        }
     }
     
     @objc func tapToCancel() {
@@ -79,7 +87,7 @@ class HabitDetailsViewController: UIViewController {
     }
     
     @objc func editHabit() {
-        navigationController?.pushViewController(HabitViewController(habit), animated: true)
+        navigationController?.present(HabitViewController(habit), animated: true, completion: nil)
     }
     
     @objc func updateTable() {

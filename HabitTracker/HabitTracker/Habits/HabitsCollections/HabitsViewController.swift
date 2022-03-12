@@ -14,6 +14,7 @@ class HabitsViewController: UIViewController {
         layout.scrollDirection = .vertical
         layout.minimumLineSpacing = Const.titleIndent
         layout.sectionInsetReference = .fromContentInset
+        layout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: Const.height)
         layout.sectionInset = UIEdgeInsets(top: Const.indent, left: Const.leadingMargin, bottom: Const.indent, right: Const.leadingMargin)
         return layout
     }()
@@ -26,14 +27,6 @@ class HabitsViewController: UIViewController {
         return collectionView
     }()
     
-    lazy var todayLabel: UILabel = {
-        let label = UILabel()
-        label.toAutoLayout()
-        label.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
-        label.textColor = .black
-        label.text = "Сегодня"
-        return label
-    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,18 +37,20 @@ class HabitsViewController: UIViewController {
                                             target: self,
                                             action: #selector(addNewHabit))
         navigationItem.rightBarButtonItem = barButtonItem
-        navigationItem.leftBarButtonItem = UIBarButtonItem.init(customView: todayLabel)
         
         view.backgroundColor = Const.foneColor
         HabitsViewController.collectionView.dataSource = self
         HabitsViewController.collectionView.delegate = self
         
-        view.addSubviews(HabitsViewController.collectionView, todayLabel)
+        view.addSubviews(HabitsViewController.collectionView)
         
         HabitsViewController.collectionView.register(ProgressCollectionViewCell.self,
                                                      forCellWithReuseIdentifier: ProgressCollectionViewCell.identifire)
         HabitsViewController.collectionView.register(HabitCollectionViewCell.self,
                                                      forCellWithReuseIdentifier: HabitCollectionViewCell.identifire)
+        HabitsViewController.collectionView.register(HabitCollectionViewHeader.self,
+                                                     forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                                                     withReuseIdentifier: HabitCollectionViewHeader.identifire)
         useConstraint()
        
     }
@@ -70,7 +65,7 @@ class HabitsViewController: UIViewController {
     
 
     @objc func addNewHabit() {
-        navigationController?.pushViewController(HabitViewController(nil), animated: true)
+        navigationController?.present(HabitViewController(nil), animated: true, completion: nil)
     }
     
 }
@@ -93,6 +88,14 @@ extension HabitsViewController: UICollectionViewDataSource, UICollectionViewDele
             cell.setup(habit: HabitsStore.shared.habits[indexPath.item - 1])
             return cell
         }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard let cell = collectionView.dequeueReusableSupplementaryView(ofKind: kind,
+                                                                         withReuseIdentifier: HabitCollectionViewHeader.identifire,
+                                                                         for: indexPath) as? HabitCollectionViewHeader else { return UICollectionReusableView() }
+        return cell
+                
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
